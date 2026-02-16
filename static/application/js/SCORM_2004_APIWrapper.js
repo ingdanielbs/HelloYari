@@ -1,6 +1,6 @@
 /****************************************************************************
 SCORM_2004_APIwrapper.js
-© 2000, 2011 Advanced Distributed Learning (ADL). Some Rights Reserved.
+ï¿½ 2000, 2011 Advanced Distributed Learning (ADL). Some Rights Reserved.
 *****************************************************************************
 
 Advanced Distributed Learning ("ADL") grants you ("Licensee") a  non-exclusive, 
@@ -488,9 +488,133 @@ function getAPI()
    }
    if (theAPI == null)
    {
-      message("Unable to find an API adapter");
+      message("No LMS found. Creating localStorage-backed mock SCORM API for standalone mode.");
+      theAPI = createStandaloneMockAPI();
    }
    return theAPI
+}
+
+/*******************************************************************************
+**
+** Function createStandaloneMockAPI()
+** Inputs:  None
+** Return:  A mock API_1484_11 object backed by localStorage
+**
+** Description:
+** Creates a mock SCORM 2004 API that stores all data in localStorage.
+** This allows the SCORM content to run outside of an LMS (e.g., on
+** GitHub Pages or any static web server).
+**
+*******************************************************************************/
+function createStandaloneMockAPI() {
+   var STORAGE_KEY = 'scorm_mock_data';
+   var storage = {};
+   var lastError = '0';
+
+   // Try to load previously saved data from localStorage
+   try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+         storage = JSON.parse(saved);
+      }
+   } catch(e) {
+      storage = {};
+   }
+
+   // Set default launch data if not already present
+   if (!storage['cmi.launch_data']) {
+      // Use values from startup.js (lms_config) if available, otherwise defaults
+      var pt = (typeof lms_config !== 'undefined' && lms_config && lms_config.product_type) ? lms_config.product_type : 'sena';
+      var sn = (typeof lms_config !== 'undefined' && lms_config && lms_config.sco_number) ? lms_config.sco_number : 5001;
+      var lg = (typeof lms_config !== 'undefined' && lms_config && lms_config.lang) ? lms_config.lang : 'eng';
+      var sid = (typeof lms_config !== 'undefined' && lms_config && lms_config.student_id) ? lms_config.student_id : 1;
+
+      storage['cmi.launch_data'] = JSON.stringify({
+         "product_type": pt,
+         "client_id": 1,
+         "client_config": "default",
+         "sco_number": sn,
+         "lang": lg,
+         "student_id": sid,
+         "student_name": "Student",
+         "course_name": "",
+         "course_id": "",
+         "level_name": "",
+         "unit_name": "",
+         "exit_url": ""
+      });
+   }
+
+   // Initialize SCORM data model counts if not present
+   if (!storage['cmi.objectives._count']) storage['cmi.objectives._count'] = '0';
+   if (!storage['cmi.interactions._count']) storage['cmi.interactions._count'] = '0';
+
+   // Helper to persist storage to localStorage
+   function persistStorage() {
+      try {
+         localStorage.setItem(STORAGE_KEY, JSON.stringify(storage));
+      } catch(e) {
+         // localStorage might be full or unavailable
+      }
+   }
+
+   // Helper to auto-increment array _count values
+   function updateArrayCount(name) {
+      // Match patterns like cmi.objectives.0.id or cmi.interactions.5.type
+      var match = name.match(/^(cmi\.(objectives|interactions))\.(\d+)\./); 
+      if (match) {
+         var countKey = match[1] + '._count';
+         var idx = parseInt(match[3], 10);
+         var currentCount = parseInt(storage[countKey] || '0', 10);
+         if (idx >= currentCount) {
+            storage[countKey] = (idx + 1).toString();
+         }
+      }
+   }
+
+   return {
+      Initialize: function(param) {
+         lastError = '0';
+         return 'true';
+      },
+      Terminate: function(param) {
+         lastError = '0';
+         persistStorage();
+         return 'true';
+      },
+      GetValue: function(name) {
+         lastError = '0';
+         if (typeof storage[name] !== 'undefined') {
+            return storage[name];
+         }
+         // Return '0' for _count queries that haven't been set
+         if (name.match(/_count$/)) {
+            return '0';
+         }
+         return '';
+      },
+      SetValue: function(name, value) {
+         lastError = '0';
+         storage[name] = value;
+         updateArrayCount(name);
+         persistStorage();
+         return 'true';
+      },
+      Commit: function(param) {
+         lastError = '0';
+         persistStorage();
+         return 'true';
+      },
+      GetLastError: function() {
+         return lastError;
+      },
+      GetErrorString: function(errorCode) {
+         return '';
+      },
+      GetDiagnostic: function(errorCode) {
+         return '';
+      }
+   };
 }
 
 /*******************************************************************************

@@ -185,7 +185,12 @@ var lesson_model = function(sco_json, lms_config, sco_number, lesson_config_json
             self.elapsed_seconds = (self.exit_time - self.start_time)/1000;
         }
         self.get_progress();
-        window.location = lms_config.exit_url;
+        if(lms_config.exit_url && lms_config.exit_url !== ""){
+            window.location = lms_config.exit_url;
+        } else {
+            // In standalone mode (no LMS), just close the window or stay on page
+            try { window.close(); } catch(e) {}
+        }
     };
     self.edit = new edit_model(self);
 };

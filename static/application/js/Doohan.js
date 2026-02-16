@@ -6,7 +6,8 @@ function disable_console_logs(){
     }
     else{
         console.log = empty_function;
-        console.error = empty_function;
+        // Keep console.error active so JavaScript errors remain visible
+        // console.error = empty_function;
     }
 }
 

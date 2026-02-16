@@ -9,7 +9,10 @@ function FindObjectiveIndex(objectiveId){
       }
    }
 
-   alert("ERROR - could not find objective: " + objectiveId);
+   // Objective not found - create it instead of blocking with an alert
+   var newIndex = parseInt(objCount, 10) || 0;
+   doSetValue("cmi.objectives." + newIndex + ".id", objectiveId);
+   return newIndex;
 }
 
 //SCORM requires time to be formatted in a specific way
