@@ -62,6 +62,7 @@ function ajax_get_sco_json(type, sco_number, lang)
     if(typeof lms_config.sco_json !== 'undefined'){
         url = "assets/"+type+"/scos/"+sco_number+"/"+lang+"/"+lms_config.sco_json+'?ts='+new Date().getTime();
     }
+    console.warn("[DEBUG] ajax_get_sco_json URL:", url);
     var ret = undefined;
     $.ajax({
         url: url,
@@ -69,8 +70,12 @@ function ajax_get_sco_json(type, sco_number, lang)
         async: false,
         success: function (data, status, xhr) {
             ret = data;
+        },
+        error: function(xhr, status, error) {
+            console.warn("[DEBUG] ajax_get_sco_json FAILED:", status, error, "URL:", url, "HTTP Status:", xhr.status);
         }
     });
+    console.warn("[DEBUG] ajax_get_sco_json result:", ret ? "OK ("+typeof ret+")" : "UNDEFINED");
     return ret;
 }
 
