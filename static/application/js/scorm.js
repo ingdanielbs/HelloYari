@@ -9,10 +9,11 @@ function FindObjectiveIndex(objectiveId){
       }
    }
 
-   // Objective not found - create it instead of blocking with an alert
-   var newIndex = parseInt(objCount, 10) || 0;
+   // Auto-create the objective if not found (standalone/no-LMS mode)
+   var newIndex = objCount;
    doSetValue("cmi.objectives." + newIndex + ".id", objectiveId);
-   return newIndex;
+   console.log("[SCORM] Auto-created objective '" + objectiveId + "' at index " + newIndex);
+   return parseInt(newIndex, 10);
 }
 
 //SCORM requires time to be formatted in a specific way

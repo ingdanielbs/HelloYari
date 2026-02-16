@@ -926,7 +926,7 @@ function product_lesson_model(obj)
     obj.make_fullscreen_btn_pressed = ko.observable(false);
 
     obj.set_frameset_flag = function(){
-        if(initialized && $(document).find("#ScormContent").length > 0){
+        if(initialized && $(document).find("#ScormContent")){
             try{
                 parent.document.getElementById("ScormContent").setAttribute("allowfullscreen", "true");
             }
@@ -1025,7 +1025,7 @@ function product_lesson_model(obj)
         }
     }
 
-    if(initialized && $(document).find("#ScormContent").length > 0){
+    if(initialized && $(document).find("#ScormContent")){
         if (parent.document.addEventListener)
         {
             document.addEventListener('keydown', escKeyHandler, false);
